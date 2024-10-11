@@ -57,6 +57,10 @@ class Blockchain:
 
             combined_hash = sha256((current_block['block_hash'] + current_block['previous_block_hash'] + current_block['merkle_hash']).encode()).hexdigest()
             nonce_hash = sha256(str(combined_hash + str(current_block['nonce'])).encode()).hexdigest()
+            transaction_hashes = [transaction['hash'] for transaction in current_block['transactions']]
+
+            while len(transaction_hashes) > 1:
+                transaction_hashes = [sha256(transaction_hashes[i].encode() + transaction_hashes[i + 1].encode()).hexdigest() for i in range(0, len(transaction_hashes), 2)]
             
             if current_block['previous_block_hash'] != previous_block['block_hash']:
                 return False
@@ -67,9 +71,7 @@ class Blockchain:
             if current_block['block_hash'] != sha256(current_block['previous_block_hash'].encode() + current_block['merkle_hash'].encode()).hexdigest():
                 return False
 
-            level_one = [sha256(current_block['transactions'][i]['hash'].encode() + current_block['transactions'][i + 1]['hash'].encode()).hexdigest() for i in range(0, len(current_block['transactions']), 2)]
-            level_two = [sha256(level_one[i].encode() + level_one[i + 1].encode()).hexdigest() for i in range(0, len(level_one), 2)]
-            if sha256(level_two[0].encode() + level_two[1].encode()).hexdigest() != current_block['merkle_hash']:
+            if current_block['merkle_hash'] != transaction_hashes[0]:
                 return False
-
+            
         return True
