@@ -5,14 +5,18 @@ class Block:
         """
         Initialize the Block object. The block transactions must be a list of 8 transactions objects.
         Inputs:
-            - transactions: A list of 8 transaction objects
+            - transactions: List of transactions in the blocks that must be a power of 2
             - previous_block_hash: The hash of the previous block
             - nonce: The nonce of the block
         Output:
             - None            
         """
-        if len(transactions) != 8:
-            raise ValueError("Invalid number of transactions in block, expected 8")
+        num_transactions = len(transactions)
+        if num_transactions <= 0:
+            raise ValueError("Invalid number of transactions in the block")
+        if (num_transactions & (num_transactions - 1)) != 0:
+            raise ValueError("Invalid number of transactions. The number of transactions must be a power of 2")
+        
         self.transactions = transactions
         self.nonce = nonce
         self.previous_block_hash = previous_block_hash
@@ -30,7 +34,7 @@ class Block:
         self.block_hash = sha256(str(self.previous_block_hash).encode() + str(self.merkle_hash).encode()).hexdigest()
         return self.block_hash
 
-    def calculate_merkle_hash(self, block = None) -> str:
+    def calculate_merkle_hash(self) -> str:
         """
         Calculate the merkle hash of the transactions in the block and store it in the merkle_hash attribute
         Inputs:
@@ -38,11 +42,10 @@ class Block:
         Outputs:
             - str: The merkle hash of the transactions in the block
         """
-        if block:
-            return block
-        level_one = [sha256(self.transactions[x]['hash'].encode() + self.transactions[x + 1]['hash'].encode()).hexdigest() for x in range(0, len(self.transactions), 2)]
-        level_two = [sha256(level_one[x].encode() + level_one[x + 1].encode()).hexdigest() for x in range(0, len(level_one), 2)]
-        return sha256(level_two[0].encode() + level_two[1].encode()).hexdigest()
+        hashes = [transaction['hash'] for transaction in self.transactions]
+        while len(hashes) > 1:
+            hashes = [sha256(hashes[i].encode() + hashes[i + 1].encode()).hexdigest() for i in range(0, len(hashes), 2)]
+        return hashes[0]
 
 
     def block_values(self) -> dict:
