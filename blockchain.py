@@ -39,7 +39,7 @@ class Blockchain:
             return "0"
         return self.chain[-1]['block_hash']
 
-    def verify_block(self):
+    def verify_chain(self):
         """
         Will verify the following attributes of each block in the chain:
             - Previous block hash
