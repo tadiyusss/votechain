@@ -65,7 +65,7 @@ class Block:
         }
 
     def calculate_nonce(self) -> int:
-        """
+        """ 
         Calculate the nonce of the block
         Inputs:
             - None
@@ -76,7 +76,7 @@ class Block:
         nonce = 0
         while True:
             nonce_hash = sha256(str(combined_hash + str(nonce)).encode()).hexdigest()
-            if nonce_hash.startswith("0000"):
+            if nonce_hash.startswith("0000000"): # Difficulty level (more zeros = more difficulty)
                 self.nonce = nonce
                 return {
                     "nonce": nonce,
