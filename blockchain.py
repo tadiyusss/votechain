@@ -1,6 +1,13 @@
+"""
+TODO:
+- Fix import and export chain, They must import the data and convert them into objects.
+"""
+
 from hashlib import sha256
 import json
 import sqlite3
+from block import Block
+from transaction import Transaction
 
 class Blockchain:
     
@@ -37,7 +44,7 @@ class Blockchain:
         """
         if len(self.chain) == 0:
             return "0"
-        return self.chain[-1]['block_hash']
+        return self.chain[-1].block_hash
 
     def verify_chain(self):
         """
@@ -57,44 +64,36 @@ class Blockchain:
             current_block = self.chain[iterator]
             previous_block = self.chain[iterator - 1]
 
-            combined_hash = sha256((current_block['block_hash'] + current_block['previous_block_hash'] + current_block['merkle_hash']).encode()).hexdigest()
-            nonce_hash = sha256(str(combined_hash + str(current_block['nonce'])).encode()).hexdigest()
-            transaction_hashes = [transaction['hash'] for transaction in current_block['transactions']]
-            transactions = [transaction for transaction in current_block['transactions']]
-            
-            while len(transaction_hashes) > 1:
-                transaction_hashes = [sha256(transaction_hashes[i].encode() + transaction_hashes[i + 1].encode()).hexdigest() for i in range(0, len(transaction_hashes), 2)]
-            
-            # Check if all transactions are valid
-            for transaction in transactions:
-                hash = sha256(transaction['data'].encode() + transaction['timestamp'].encode()).hexdigest()
-                if hash != transaction['hash']:
-                    print(f"Block {iterator} transaction hash does not match")
+
+            # Check if previous block hash is correct
+            if current_block.previous_block_hash != previous_block.block_hash:
+                if iterator != 0:
+                    print(f"Block {iterator} has an invalid previous block hash")
                     return False
-
-            # Check if the previous block hash matches
-            if current_block['previous_block_hash'] != previous_block['block_hash']:
-                if iterator == 0:
-                    continue
-                print(iterator)
-                print(f"Block {iterator} previous block hash does not match")
-                return False
-
-            # Check if the block hash matches
-            if current_block['block_hash'] != sha256(current_block['previous_block_hash'].encode() + current_block['merkle_hash'].encode()).hexdigest():
-                print(f"Block {iterator} block hash does not match")
+            
+            # Check if the block hash is correct
+            if current_block.calculate_hash() != current_block.block_hash:
+                print(f"Block {iterator} has an invalid block hash")
                 return False
             
-            # Check if the nonce hash starts with 4 zeros
-            if nonce_hash.startswith("0000") == False:
-                print(f"Block {iterator} nonce does not match")
-                return False
-
-            # Check if the merkle hash matches
-            if current_block['merkle_hash'] != transaction_hashes[0]:
-                print(f"Block {iterator} merkle hash does not match")
+            # Check if the nonce is correct
+            combined_hash = sha256((current_block.block_hash + current_block.previous_block_hash + current_block.merkle_hash).encode()).hexdigest()
+            if sha256(combined_hash.encode() + str(current_block.nonce).encode()).hexdigest()[:4] != "0000":
+                print(f"Block {iterator} has an invalid nonce")
                 return False
             
+            # Check if the merkle hash is correct
+            if current_block.calculate_merkle_hash() != current_block.merkle_hash:
+                print(current_block.calculate_merkle_hash())
+                print(current_block.merkle_hash)
+                print(f"Block {iterator} has an invalid merkle hash")
+                return False
+            
+            # Check if the transaction hashes are correct
+            for transaction_iterator in range(0, len(current_block.transactions)):
+                if current_block.transactions[transaction_iterator].calculate_hash() != current_block.transactions[transaction_iterator].hash:
+                    print(f"Block {iterator}, transaction {transaction_iterator} has an invalid transaction hash")
+                    return False
         return True
     
     def export_chain(self, filetype = 'json', name = 'blockchain'):
@@ -106,8 +105,18 @@ class Blockchain:
             - None
         """
         if filetype == "json":
+            result = []
+            for block in self.chain:
+                block_values = block.block_values()
+                result.append({
+                    "block_hash": block_values['block_hash'],
+                    "previous_block_hash": block_values['previous_block_hash'],
+                    "merkle_hash": block_values['merkle_hash'],
+                    "nonce": block_values['nonce'],
+                    "transactions": [transaction.transaction_values() for transaction in block_values['transactions']]
+                })
             with open(f'{name}.json', 'w') as file:
-                json.dump({"blocks": self.chain}, file, indent=4)
+                json.dump({"blocks": result}, file, indent=4)
 
         elif filetype == "sqlite":
 
@@ -145,10 +154,5 @@ class Blockchain:
             for block in blocks:
                 cursor.execute("SELECT hash, timestamp, data FROM transactions WHERE block_hash = ?", (block[0],))
                 transactions = cursor.fetchall()
-                self.chain.append({
-                    "block_hash": block[0],
-                    "previous_block_hash": block[1],
-                    "merkle_hash": block[2],
-                    "nonce": block[3],
-                    "transactions": [{"hash": transaction[0], "timestamp": transaction[1], "data": transaction[2]} for transaction in transactions]
-                })
+                # Add the block object to the chain with the transaction objects.
+                self.chain.append(Block([Transaction(transaction[2], transaction[1], transaction[0]) for transaction in transactions], block[1], block[3], block[2], block[0]))
