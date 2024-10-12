@@ -2,7 +2,7 @@ from hashlib import sha256
 from datetime import datetime
 
 class Transaction:
-    def __init__(self, data, timestamp = datetime.now()) -> None:
+    def __init__(self, data, timestamp = datetime.now().strftime('%m/%d/%Y-%H:%M:%S:%f')) -> None:
         """
         Initialize the Transaction object
         Inputs:
