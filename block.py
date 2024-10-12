@@ -1,7 +1,12 @@
+"""
+TODO:
+- Fix merkle check in verify_chain
+- Fix import and export chain, They must import the data and convert them into objects.
+"""
 from hashlib import sha256
 
 class Block:
-    def __init__(self, transactions: list, previous_block_hash: str = None, nonce: int = None) -> None:
+    def __init__(self, transactions: list, previous_block_hash: str = None, nonce: int = None, merkle_hash: str = None, block_hash: str = None) -> None:
         """
         Initialize the Block object. The block transactions must be a list of 8 transactions objects.
         Inputs:
@@ -11,17 +16,28 @@ class Block:
         Output:
             - None            
         """
+        self.transactions = transactions
+        self.previous_block_hash = previous_block_hash
+        self.nonce = nonce
         num_transactions = len(transactions)
+
         if num_transactions <= 0:
             raise ValueError("Invalid number of transactions in the block")
         if (num_transactions & (num_transactions - 1)) != 0:
             raise ValueError("Invalid number of transactions. The number of transactions must be a power of 2")
         
-        self.transactions = transactions
-        self.nonce = nonce
-        self.previous_block_hash = previous_block_hash
-        self.merkle_hash = self.calculate_merkle_hash()
-        self.block_hash = self.calculate_hash()
+        for index in range(0, len(self.transactions)):
+            transactions[index].index = index 
+
+        if merkle_hash is not None:
+            self.merkle_hash = merkle_hash
+        else:
+            self.merkle_hash = self.calculate_merkle_hash()
+
+        if block_hash is not None:
+            self.block_hash = block_hash
+        else:
+            self.block_hash = self.calculate_hash()
 
     def calculate_hash(self) -> str:
         """
@@ -42,7 +58,7 @@ class Block:
         Outputs:
             - str: The merkle hash of the transactions in the block
         """
-        hashes = [transaction['hash'] for transaction in self.transactions]
+        hashes = [self.transactions[index].hash for index in range(0, len(self.transactions))]
         while len(hashes) > 1:
             hashes = [sha256(hashes[i].encode() + hashes[i + 1].encode()).hexdigest() for i in range(0, len(hashes), 2)]
         return hashes[0]
