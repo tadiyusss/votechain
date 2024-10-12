@@ -45,6 +45,7 @@ class Blockchain:
             - Previous block hash
             - Nonce
             - Block hash
+            - Transaction hashes (!)
             - Merkle hash
         Inputs:
             - None
@@ -59,14 +60,18 @@ class Blockchain:
             combined_hash = sha256((current_block['block_hash'] + current_block['previous_block_hash'] + current_block['merkle_hash']).encode()).hexdigest()
             nonce_hash = sha256(str(combined_hash + str(current_block['nonce'])).encode()).hexdigest()
             transaction_hashes = [transaction['hash'] for transaction in current_block['transactions']]
-
+            transactions = [transaction for transaction in current_block['transactions']]
+            
             while len(transaction_hashes) > 1:
                 transaction_hashes = [sha256(transaction_hashes[i].encode() + transaction_hashes[i + 1].encode()).hexdigest() for i in range(0, len(transaction_hashes), 2)]
             
+            print(1)
+            
+
             if current_block['previous_block_hash'] != previous_block['block_hash']:
                 return False
-            
-            if nonce_hash.startswith("0000000") == False:
+
+            if nonce_hash.startswith("0000") == False:
                 return False
 
             if current_block['block_hash'] != sha256(current_block['previous_block_hash'].encode() + current_block['merkle_hash'].encode()).hexdigest():
@@ -75,6 +80,7 @@ class Blockchain:
             if current_block['merkle_hash'] != transaction_hashes[0]:
                 return False
             
+
         return True
     
     def export_chain(self, filetype = 'json', name = 'blockchain'):
@@ -87,7 +93,7 @@ class Blockchain:
         """
         if filetype == "json":
             with open(f'{name}.json', 'w') as file:
-                json.dump(self.chain, file, indent=4)
+                json.dump({"blocks": self.chain}, file, indent=4)
 
         elif filetype == "sqlite":
 
@@ -104,3 +110,31 @@ class Blockchain:
                     cursor.execute(sql, (block['block_hash'], transaction['hash'], transaction['timestamp'], transaction['data']))
             cursor.execute("COMMIT;")
             cursor.close()
+
+    def import_chain(self, filename):
+        """
+        Import a blockchain from a file
+        Inputs:
+            - filename: The name of the file to import the blockchain from
+        Outputs:
+            - None
+        """
+        extension = filename.split('.')[-1]
+        if extension == "json":
+            with open(filename, 'r') as file:
+                self.chain = json.load(file)['blocks']
+        elif extension in ["sqlite3", "db"]:
+            conn = sqlite3.connect(filename)
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM blocks;")
+            blocks = cursor.fetchall()
+            for block in blocks:
+                cursor.execute("SELECT hash, timestamp, data FROM transactions WHERE block_hash = ?", (block[0],))
+                transactions = cursor.fetchall()
+                self.chain.append({
+                    "block_hash": block[0],
+                    "previous_block_hash": block[1],
+                    "merkle_hash": block[2],
+                    "nonce": block[3],
+                    "transactions": [{"hash": transaction[0], "timestamp": transaction[1], "data": transaction[2]} for transaction in transactions]
+                })
