@@ -52,8 +52,8 @@ class Blockchain:
         Outputs:
             - bool: True if the block is valid, False otherwise
         """
-        for iterator in range(1, len(self.chain)):
-
+        
+        for iterator in range(0, len(self.chain)):
             current_block = self.chain[iterator]
             previous_block = self.chain[iterator - 1]
 
@@ -65,22 +65,36 @@ class Blockchain:
             while len(transaction_hashes) > 1:
                 transaction_hashes = [sha256(transaction_hashes[i].encode() + transaction_hashes[i + 1].encode()).hexdigest() for i in range(0, len(transaction_hashes), 2)]
             
-            print(1)
-            
+            # Check if all transactions are valid
+            for transaction in transactions:
+                hash = sha256(transaction['data'].encode() + transaction['timestamp'].encode()).hexdigest()
+                if hash != transaction['hash']:
+                    print(f"Block {iterator} transaction hash does not match")
+                    return False
 
+            # Check if the previous block hash matches
             if current_block['previous_block_hash'] != previous_block['block_hash']:
+                if iterator == 0:
+                    continue
+                print(iterator)
+                print(f"Block {iterator} previous block hash does not match")
                 return False
 
-            if nonce_hash.startswith("0000") == False:
-                return False
-
+            # Check if the block hash matches
             if current_block['block_hash'] != sha256(current_block['previous_block_hash'].encode() + current_block['merkle_hash'].encode()).hexdigest():
-                return False
-
-            if current_block['merkle_hash'] != transaction_hashes[0]:
+                print(f"Block {iterator} block hash does not match")
                 return False
             
+            # Check if the nonce hash starts with 4 zeros
+            if nonce_hash.startswith("0000") == False:
+                print(f"Block {iterator} nonce does not match")
+                return False
 
+            # Check if the merkle hash matches
+            if current_block['merkle_hash'] != transaction_hashes[0]:
+                print(f"Block {iterator} merkle hash does not match")
+                return False
+            
         return True
     
     def export_chain(self, filetype = 'json', name = 'blockchain'):
