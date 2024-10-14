@@ -1,8 +1,3 @@
-"""
-TODO:
-- Fix import and export chain, They must import the data and convert them into objects.
-"""
-
 from hashlib import sha256
 import json
 import sqlite3
@@ -82,18 +77,20 @@ class Blockchain:
                 print(f"Block {iterator} has an invalid nonce")
                 return False
             
-            # Check if the merkle hash is correct
-            if current_block.calculate_merkle_hash() != current_block.merkle_hash:
-                print(current_block.calculate_merkle_hash())
-                print(current_block.merkle_hash)
-                print(f"Block {iterator} has an invalid merkle hash")
-                return False
-            
             # Check if the transaction hashes are correct
             for transaction_iterator in range(0, len(current_block.transactions)):
                 if current_block.transactions[transaction_iterator].calculate_hash() != current_block.transactions[transaction_iterator].hash:
                     print(f"Block {iterator}, transaction {transaction_iterator} has an invalid transaction hash")
                     return False
+                
+            # Check if the merkle hash is correct
+            if current_block.calculate_merkle_hash() != current_block.merkle_hash:
+                print(f"Calculated merkle hash: {current_block.calculate_merkle_hash()}")
+                print(f"Saved merkle hash: {current_block.merkle_hash}")
+                print(f"Block {iterator} has an invalid merkle hash")
+                return False
+            
+            
         return True
     
     def export_chain(self, filetype = 'json', name = 'blockchain'):
@@ -145,7 +142,16 @@ class Blockchain:
         extension = filename.split('.')[-1]
         if extension == "json":
             with open(filename, 'r') as file:
-                self.chain = json.load(file)['blocks']
+                blocks = json.load(file)['blocks']
+                for block in blocks:
+                    self.chain.append(Block(
+                        [Transaction(transaction["data"], transaction["timestamp"], transaction["hash"]) for transaction in block['transactions']],
+                        block["previous_block_hash"],
+                        block["nonce"],
+                        block["merkle_hash"],
+                        block["block_hash"]
+                    ))
+
         elif extension in ["sqlite3", "db"]:
             conn = sqlite3.connect(filename)
             cursor = conn.cursor()
