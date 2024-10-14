@@ -1,7 +1,6 @@
 """
 TODO:
 - Fix merkle check in verify_chain
-- Fix import and export chain, They must import the data and convert them into objects.
 """
 from hashlib import sha256
 
@@ -58,12 +57,22 @@ class Block:
         Outputs:
             - str: The merkle hash of the transactions in the block
         """
-        hashes = [self.transactions[index].hash for index in range(0, len(self.transactions))]
+        
+        #hashes = [self.transactions[index].hash for index in range(0, len(self.transactions))]
+        #while len(hashes) > 1:
+        #    hashes = [sha256(hashes[i].encode() + hashes[i + 1].encode()).hexdigest() for i in range(0, len(hashes), 2)]
+        #return hashes[0]
+        sorted_transactions = [self.transactions[index] for index in range(0, len(self.transactions))]
+        hashes = [transaction.hash for transaction in sorted_transactions]
+
         while len(hashes) > 1:
+            print(hashes)
             hashes = [sha256(hashes[i].encode() + hashes[i + 1].encode()).hexdigest() for i in range(0, len(hashes), 2)]
+        
+        print(hashes[0])
+        print("------")
+
         return hashes[0]
-
-
     def block_values(self) -> dict:
         """
         Returns the block's attributes in dictionary format
