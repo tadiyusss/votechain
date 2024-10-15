@@ -2,7 +2,7 @@ from hashlib import sha256
 from datetime import datetime
 
 class Transaction:
-    def __init__(self, data, timestamp = datetime.now().strftime('%m/%d/%Y-%H:%M:%S:%f'), transaction_hash = None) -> None:
+    def __init__(self, data, timestamp = None, transaction_hash = None, index: int = None) -> None:
         """
         Initialize the Transaction object
         Inputs:
@@ -13,13 +13,18 @@ class Transaction:
         Outputs:
             - None
         """
-        self.index = None
+        self.index = index
         self.data = data
         self.timestamp = timestamp
         if transaction_hash is not None:
             self.hash = transaction_hash
         else:
             self.hash = self.calculate_hash()
+
+        if timestamp is None:
+            self.timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            self.timestamp = timestamp
 
     def calculate_hash(self) -> str:
         """
@@ -29,7 +34,8 @@ class Transaction:
         Outputs:
             - str: The hash of the transaction
         """
-        self.hash = sha256(str(self.index).encode() + str(self.data).encode() + str(self.timestamp).encode()).hexdigest()
+        
+        self.hash = sha256((str(self.index) + str(self.data) + str(self.timestamp)).encode()).hexdigest()
         return self.hash
 
     def transaction_values(self) -> dict:
