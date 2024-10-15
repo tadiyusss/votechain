@@ -1,7 +1,3 @@
-"""
-TODO:
-- Fix merkle check in verify_chain
-"""
 from hashlib import sha256
 
 class Block:
@@ -57,22 +53,19 @@ class Block:
         Outputs:
             - str: The merkle hash of the transactions in the block
         """
+        def merkle_hash(transactions):
+            if len(transactions) == 1:
+                return transactions[0]
+            new_level = []
+            for i in range(0, len(transactions), 2):
+                new_hash = sha256((transactions[i] + transactions[i + 1]).encode()).hexdigest()
+                new_level.append(new_hash)
+            return merkle_hash(new_level)
         
-        #hashes = [self.transactions[index].hash for index in range(0, len(self.transactions))]
-        #while len(hashes) > 1:
-        #    hashes = [sha256(hashes[i].encode() + hashes[i + 1].encode()).hexdigest() for i in range(0, len(hashes), 2)]
-        #return hashes[0]
-        sorted_transactions = [self.transactions[index] for index in range(0, len(self.transactions))]
-        hashes = [transaction.hash for transaction in sorted_transactions]
-
-        while len(hashes) > 1:
-            print(hashes)
-            hashes = [sha256(hashes[i].encode() + hashes[i + 1].encode()).hexdigest() for i in range(0, len(hashes), 2)]
+        transaction_hashes = [sha256(str(tx.hash).encode()).hexdigest() for tx in self.transactions]
+        self.merkle_hash = merkle_hash(transaction_hashes)
+        return self.merkle_hash
         
-        print(hashes[0])
-        print("------")
-
-        return hashes[0]
     def block_values(self) -> dict:
         """
         Returns the block's attributes in dictionary format
