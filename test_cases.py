@@ -23,7 +23,7 @@ if "--create-transactions" in arguments or len(arguments) == 0:
 if "--create-block" in arguments or len(arguments) == 0:
     block = Block(transactions, blockchain.get_previous_block_hash(), None, index = blockchain.get_next_index())
     block.nonce = block.calculate_block_nonce()
-    
+
     blockchain.add_block(block)
 
     print(f"System Generated Chain Validity: {blockchain.validate_chain()}")
