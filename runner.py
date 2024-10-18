@@ -1,22 +1,27 @@
-from transaction import Transaction
 from block import Block
+from transaction import Transaction
 from blockchain import Blockchain
 from datetime import datetime
-import time
 import json
 from sys import argv
 
 blockchain = Blockchain()
-data = ['Alice'] * 8
+names = ["Thaddeus", "Toledo"]
 
-
-if '--export' in argv or '--both' in argv:
-    transactions = [Transaction(data[i]) for i in range(0, len(data))]
-    block = Block(transactions, blockchain.get_previous_block_hash())
-    block.calculate_nonce()
+for counter in range(5):
+    transactions = []
+    for i in range(0, len(names)):
+        transaction = Transaction(names[i], index = i)
+        transactions.append(transaction)
+    
+    block = Block(transactions, blockchain.get_previous_block_hash(), None, index = blockchain.get_next_index())
+    block.nonce = block.calculate_block_nonce()
     blockchain.add_block(block)
-    print(f"Exported chain validity: {blockchain.verify_chain()}")
-    blockchain.export_chain('blockchain.db')
-if '--import' in argv or '--both' in argv:
-    blockchain.import_chain('blockchain.db')
-    print(f"Imported chain validity: {blockchain.verify_chain()}")
+
+for block in blockchain.chain:
+    print(json.dumps(block.block_values(), indent = 4))
+print(f"System Generated Chain Validity: {blockchain.validate_chain()}")
+
+blockchain.export_chain()
+blockchain.import_chain("blockchain")
+print(f"Database Generated Chain Validity: {blockchain.validate_chain()}")
