@@ -47,7 +47,7 @@ class Block:
     
     def calculate_block_nonce(self) -> int:
         print(f"Mining block for index {self.index}")
-        combined_hash = sha256(self.block_hash.encode() + self.previous_block_hash.encode() + self.root_hash.encode()).hexdigest()
+        combined_hash = sha256(str(self.index).encode() + self.block_hash.encode() + self.previous_block_hash.encode() + self.root_hash.encode()).hexdigest()
         nonce = 0
         while True:
             nonce_hash = sha256((combined_hash + str(nonce)).encode()).hexdigest()
