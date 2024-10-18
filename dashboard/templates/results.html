@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-5xl mx-auto p-3 my-24">
+    <a href="{{ url_for('dashboard.index') }}" class="border px-5 py-1 rounded hover:bg-gray-200 ease duration-200">Return</a>
+    <div class="grid grid-cols-3 gap-2.5 mt-5">
+        {% for candidate in results %}
+            <div class="border w-full p-4 rounded">
+                <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png" class="rounded-full h-32 d-block mx-auto">
+                <h4 class="text-center mt-5">{{candidate}}</h4>
+                <p class="text-center">Votes: {{ results[candidate] }}</p>
+            </div>
+        {% endfor %}
+    </div>
+    {% if is_valid == true %}
+        <div class="w-full p-3 my-5 rounded border border-green-500 bg-green-600 text-white">
+            <p>Blockchain is valid.</p>
+        </div>
+    {% else %}
+        <div class="w-full p-3 my-5 rounded border border-red-500 bg-red-600 text-white">
+            <p>Blockchain is invalid results may be inaccurate.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

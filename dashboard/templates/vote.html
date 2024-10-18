@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+
+
+<form class="max-w-7xl mx-auto" method="POST">
+    {% if is_valid == true %}
+        <div class="w-full p-3 my-5 rounded border border-green-500 bg-green-600 text-white">
+            <p>Blockchain is valid.</p>
+        </div>
+    {% else %}
+        <div class="w-full p-3 my-5 rounded border border-red-500 bg-red-600 text-white">
+            <p>Blockchain is invalid.</p>
+        </div>
+    {% endif %}
+    <div class="grid grid-cols-3 gap-2.5 my-5">
+        
+        {{ form.csrf_token() }}
+        {% for subfield in form.candidates %}
+        <label for="{{ subfield.id }}" class="border w-full p-4 rounded cursor-pointer has-[:checked]:bg-gray-100">
+            {{ subfield(class="hidden") }}
+            <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png" class="rounded-full h-32 d-block mx-auto">
+            <h4 class="text-center mt-5">{{ subfield.label }}</h4>
+        </label>
+        {% endfor %}
+    </div>
+    {% for error in form.candidates.errors %}
+        <p class="w-full mb-4 text-red-600 text-semibold">{{error}}</p>
+    {% endfor %}
+    <div class="flex justify-end items-center space-x-5">
+        <a href="{{ url_for('dashboard.results') }}" class="px-5 py-1 border bg-gray-100 hover:bg-gray-200 ease duration-200 rounded">Results</a>
+        <input type="submit" value="Submit" class="border px-5 py-1 rounded bg-gray-100 hover:bg-gray-200 ease duration-200">
+    </div>
+</form>
+
+{% endblock %}
