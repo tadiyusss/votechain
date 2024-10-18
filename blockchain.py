@@ -21,9 +21,14 @@ class Blockchain:
 
     def validate_chain(self) -> bool:
         for iterator in range(0, len(self.chain)):
-
+            
             current_block = self.chain[iterator]
             previous_block = self.chain[iterator - 1]
+
+            # Index
+            if current_block.index != iterator:
+                print(f"Block {iterator} has an invalid index")
+                return
 
             # Previous block hash
             if current_block.previous_block_hash != previous_block.block_hash:
@@ -44,7 +49,8 @@ class Blockchain:
                 return False
 
             # Nonce
-            if current_block.nonce != current_block.calculate_block_nonce():
+            combined_hash = sha256(str(current_block.index).encode() + current_block.block_hash.encode() + current_block.previous_block_hash.encode() + current_block.root_hash.encode()).hexdigest()
+            if sha256((combined_hash + str(current_block.nonce)).encode()).hexdigest().startswith("0" * 5) == False:
                 print(f"Block {iterator} has an invalid nonce")
                 return False
 
