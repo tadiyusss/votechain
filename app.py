@@ -2,7 +2,7 @@ from flask import Flask
 
 def create_app():
     app = Flask(__name__)
-    app.config["SECRET_KEY"] = "s3cr3t-k3y"
+    app.config["SECRET_KEY"] = "very_secret_key"
     from dashboard import dashboard
     from api import api
 
