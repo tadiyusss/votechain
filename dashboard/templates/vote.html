@@ -12,7 +12,7 @@
             <p>Blockchain is invalid.</p>
         </div>
     {% endif %}
-    <div class="grid grid-cols-3 gap-2.5 my-5">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 my-5 md:mx-0 mx-2.5">
         
         {{ form.csrf_token() }}
         {% for subfield in form.candidates %}
@@ -26,10 +26,15 @@
     {% for error in form.candidates.errors %}
         <p class="w-full mb-4 text-red-600 text-semibold">{{error}}</p>
     {% endfor %}
-    <div class="flex justify-end items-center space-x-5">
-        <a href="{{ url_for('dashboard.results') }}" class="px-5 py-1 border bg-gray-100 hover:bg-gray-200 ease duration-200 rounded">Results</a>
-        <input type="submit" value="Submit" class="border px-5 py-1 rounded bg-gray-100 hover:bg-gray-200 ease duration-200">
+    <div class="flex justify-between items-center">
+        {{ form.private_key(class="border border-gray-200 px-2.5 py-1 rounded w-64 focus:outline-none focus:border-gray-500", placeholder="Private Key") }}
+        <div class="flex items-center space-x-5">
+            <a href="{{ url_for('dashboard.register') }}" class="px-5 py-1 border bg-gray-100 hover:bg-gray-200 ease duration-200 rounded">Register</a>
+            <a href="{{ url_for('dashboard.results') }}" class="px-5 py-1 border bg-gray-100 hover:bg-gray-200 ease duration-200 rounded">Results</a>
+            {{ form.submit(class="border px-5 py-1 rounded bg-gray-100 hover:bg-gray-200 ease duration-200") }}
+        </div>
     </div>
+    
 </form>
 
 {% endblock %}
