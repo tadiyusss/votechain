@@ -52,13 +52,18 @@ class Blockchain:
                 print(f"Block {iterator} has an invalid nonce")
                 return False
 
-            # Transaction hashes
-            # This only checks if the transaction hash is valid, not if the transaction data is valid
+            # Transactions
             for transaction_iterator in range(0, len(current_block.transactions)):
-                if current_block.transactions[transaction_iterator].transaction_hash != current_block.transactions[transaction_iterator].calculate_transaction_hash():
-                    print(f"Block {iterator} has an invalid transaction hash")
-                    return False
+                transaction = current_block.transactions[transaction_iterator]
 
+                if transaction.index != transaction_iterator:
+                    print(f"Block {iterator} has an invalid transaction index")
+                    return False
+                
+                if transaction.validate_transaction() == False:
+                    print(f"Block {iterator} has an invalid transaction")
+                    return False
+                
         return True
 
     def export_chain(self, filename = "blockchain"):
@@ -78,13 +83,15 @@ class Blockchain:
         root_hash VARCHAR(64) NOT NULL,
         nonce INT NOT NULL
         """
-        cursor.execute("CREATE TABLE IF NOT EXISTS `transactions` (`transaction_index` INT NOT NULL , `data` VARCHAR(255) NOT NULL , `timestamp` VARCHAR(255) NOT NULL , `transaction_hash` VARCHAR(64) NOT NULL , `block_hash` VARCHAR(64) NOT NULL );")
+        cursor.execute("CREATE TABLE IF NOT EXISTS `transactions` (`transaction_index` INT NOT NULL , `data` VARCHAR(255) NOT NULL , `timestamp` VARCHAR(255) NOT NULL , `transaction_hash` VARCHAR(64) NOT NULL , `block_hash` VARCHAR(64) NOT NULL, `public_key` VARCHAR(128) NOT NULL, `signature` VARCHAR(128) NOT NULL );")
         """
         transaction_index INT NOT NULL,
         data VARCHAR(255) NOT NULL,
         timestamp VARCHAR(255) NOT NULL,
         transaction_hash VARCHAR(64) NOT NULL,
-        block_hash VARCHAR(64) NOT NULL
+        block_hash VARCHAR(64) NOT NULL,
+        public_key VARCHAR(128) NOT NULL,
+        signature VARCHAR(128) NOT NULL
         """
 
 
@@ -93,8 +100,8 @@ class Blockchain:
             values = (block_values["index"], block_values["block_hash"], block_values["previous_block_hash"], block_values["nonce"], block_values["root_hash"])
             cursor.execute("INSERT INTO blocks (block_index, block_hash, previous_block_hash, nonce, root_hash) VALUES (?, ?, ?, ?, ?)", values)
             for transaction in block_values["transactions"]:
-                values = (transaction["index"], transaction["data"], transaction["timestamp"], transaction["transaction_hash"], block_values["block_hash"])
-                cursor.execute("INSERT INTO transactions (transaction_index, data, timestamp, transaction_hash, block_hash) VALUES (?, ?, ?, ?, ?)", values)
+                values = (transaction["index"], transaction["data"], transaction["timestamp"], transaction["transaction_hash"], block_values["block_hash"], transaction["public_key"], transaction["signature"])
+                cursor.execute("INSERT INTO transactions (transaction_index, data, timestamp, transaction_hash, block_hash, public_key, signature) VALUES (?, ?, ?, ?, ?, ?, ?)", values)
             cursor.execute("COMMIT;")
         connect.close()
 
@@ -110,7 +117,7 @@ class Blockchain:
             transactions = cursor.fetchall()
             transaction_objects = []
             for transaction in transactions:
-                transaction_objects.append(Transaction(transaction[1], transaction[2], transaction[3], transaction[0]))
+                transaction_objects.append(Transaction(transaction[1], transaction[2], transaction[3], transaction[0], None, transaction[5], transaction[6]))
             block_object = Block(transaction_objects, block[2], block[4], block[3], block[1], block[0])
             self.add_block(block_object)
         connect.close()
