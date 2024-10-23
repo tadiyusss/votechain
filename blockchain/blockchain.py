@@ -121,3 +121,13 @@ class Blockchain:
             block_object = Block(transaction_objects, block[2], block[4], block[3], block[1], block[0])
             self.add_block(block_object)
         connect.close()
+
+    def view_transaction(self, block_hash, transaction_hash):
+        # Slow, but it works hahaha
+        # This is just for demonstration purposes
+        for block in self.chain:
+            if block.block_hash == block_hash:
+                for transaction in block.transactions:
+                    if transaction.transaction_hash == transaction_hash:
+                        return transaction
+        return None
