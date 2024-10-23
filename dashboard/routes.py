@@ -20,16 +20,17 @@ if os.path.isfile("blockchain.db"):
 def index():
     form = VoteForm()
     if request.method == "POST" and form.validate_on_submit():
-        transaction = Transaction(form.candidates.data, index = 0)
+        if user.get_by_public_key(keys.get_public_key(form.private_key.data)) == None:
+            return {
+                "error": "Unregistered private key"
+            }
+        transaction = Transaction(form.candidates.data, index = 0, private_key = form.private_key.data)
         block = Block([transaction], blockchain.get_previous_block_hash(), None, index = blockchain.get_next_index())
         block.nonce = block.calculate_block_nonce()
         blockchain.add_block(block)
         if blockchain.validate_chain():
             blockchain.export_chain("blockchain")
-        return {
-            "vote": form.candidates.data,
-            "private_key": form.private_key.data
-        }
+        return render_template('thankyou.html', block_hash = block.block_hash, transaction_hash = transaction.transaction_hash)
     return render_template('vote.html', form = form, is_valid = blockchain.validate_chain())
 
 @dashboard.route('/view_results')
@@ -59,3 +60,8 @@ def register():
             "private_key": generated_keys["private_key"]
         }
     return render_template('register.html', form = form)
+
+@dashboard.route("/view/<block_hash>/<transaction_hash>")
+def view_transaction(block_hash, transaction_hash):
+    transaction = blockchain.view_transaction(block_hash, transaction_hash)
+    return render_template('transaction.html', transaction = transaction.transaction_values())
