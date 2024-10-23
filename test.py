@@ -16,7 +16,7 @@ PK = "f93bbdda8c208a5d2723f2d6c236602b11c140abd8a19b1b91609679350a2cae9211063746
 if "--create-transactions" in arguments or len(arguments) == 0:
     for i in range(0, len(names)):
         timestamp = datetime.now().strftime("%m/%d/%Y %H:%M:%S")
-        transaction = Transaction(names[i], index = i, public_key = PK, private_key = SK)
+        transaction = Transaction(names[i], index = i, private_key = SK)
         transactions.append(transaction)
 
 if "--show-transactions" in arguments or len(arguments) == 0:
