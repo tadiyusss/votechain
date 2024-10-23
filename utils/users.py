@@ -12,3 +12,7 @@ class User:
     def create_user(self, username, first_name, last_name, public_key):
         self.cursor.execute("INSERT INTO users (username, first_name, last_name, public_key) VALUES (?, ?, ?, ?)", (username, first_name, last_name, public_key))
         self.connection.commit()
+
+    def get_by_public_key(self, public_key):
+        self.cursor.execute("SELECT * FROM users WHERE public_key = ?", (public_key,))
+        return self.cursor.fetchone()
