@@ -24,6 +24,12 @@ def index():
             return {
                 "error": "Unregistered private key"
             }
+        
+        if blockchain.view_transaction_by_public_key(keys.get_public_key(form.private_key.data)) != None:
+            return {
+                "error": "Already voted"
+            }
+
         transaction = Transaction(form.candidates.data, index = 0, private_key = form.private_key.data)
         block = Block([transaction], blockchain.get_previous_block_hash(), None, index = blockchain.get_next_index())
         block.nonce = block.calculate_block_nonce()

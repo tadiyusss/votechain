@@ -131,3 +131,10 @@ class Blockchain:
                     if transaction.transaction_hash == transaction_hash:
                         return transaction
         return None
+    
+    def view_transaction_by_public_key(self, public_key):
+        for block in self.chain:
+            for transaction in block.transactions:
+                if transaction.public_key == public_key:
+                    return transaction
+        return None
