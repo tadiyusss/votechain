@@ -36,7 +36,7 @@ def index():
         blockchain.add_block(block)
         if blockchain.validate_chain():
             blockchain.export_chain("blockchain")
-        return render_template('thankyou.html', block_hash = block.block_hash, transaction_hash = transaction.transaction_hash)
+        return render_template('vote_added.html', block_hash = block.block_hash, transaction_hash = transaction.transaction_hash)
     return render_template('vote.html', form = form, is_valid = blockchain.validate_chain())
 
 @dashboard.route('/view_results')
@@ -58,16 +58,10 @@ def register():
             return "User already exists"
         generated_keys = keys.generate_keys()
         user.create_user(form.username.data, form.first_name.data, form.last_name.data, generated_keys["public_key"])
-        return {
-            "username": form.username.data,
-            "first_name": form.first_name.data,
-            "last_name": form.last_name.data,
-            "public_key": generated_keys["public_key"],
-            "private_key": generated_keys["private_key"]
-        }
+        return render_template('valid_register.html', private_key = generated_keys["private_key"])
     return render_template('register.html', form = form)
 
 @dashboard.route("/view/<block_hash>/<transaction_hash>")
 def view_transaction(block_hash, transaction_hash):
     transaction = blockchain.view_transaction(block_hash, transaction_hash)
-    return render_template('transaction.html', transaction = transaction.transaction_values())
+    return render_template('view_transaction.html', transaction = transaction.transaction_values())
